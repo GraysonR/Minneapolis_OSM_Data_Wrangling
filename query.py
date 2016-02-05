@@ -1,10 +1,9 @@
 from pymongo import MongoClient
-import pprint
 
 def amenityQuery(db):
     query = [{'$match' : {'amenity' : {'$exists' : '1'}}},
-                {'$group' : {'_id' : '$amenity','count' : {'$sum' : 1}}},
-                {'$sort' : {'count' : 1}}]
+             {'$group' : {'_id' : '$amenity', 'count' : {'$sum' : 1}}},
+             {'$sort' : {'count' : 1}}]
 
     amenity_count = db.aggregate(query)
 
@@ -21,9 +20,4 @@ def postalCodeQuery(db):
 
     print len(postalCodes)
 
-if __name__ == "__main__":
-    client = MongoClient("mongodb://localhost:27017")
-    collection = client.udacity.msp_osm
-
-    amenityQuery(collection)
-    postalCodeQuery(collection)
+    return None

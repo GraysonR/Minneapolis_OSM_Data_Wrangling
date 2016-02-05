@@ -113,6 +113,3 @@ def test():
 
     #pprint.pprint(dict(amenity_tags))
     print "Audit took {0} seconds".format((end-start))
-
-if __name__ == '__main__':
-    test()
