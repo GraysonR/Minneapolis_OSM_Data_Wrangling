@@ -1,3 +1,5 @@
 *.json
 *.osm
 main.py
+__pycache__
+*.pyc

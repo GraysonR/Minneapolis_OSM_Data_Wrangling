@@ -65,6 +65,42 @@ def clean_value(value):
 
     return value
 
+def clean_subfield_tags(key, value):
+    """Cleans and structures the subfields of a k-tag.
+
+    Args:
+        key (str): The key string of the subfield.
+        value (str): The value associated with the key.
+
+    Returns:
+        TODO: fix
+    """
+    if key.startswith('addr:'):
+        # Deals with inconsistent state entered
+        if key == 'addr:state':
+            if 'w' not in str.lower(value):
+                return (0, 'state', 'MN')
+
+        elif key == 'addr:postcode':
+            if value.isdigit() and len(value) >= 5:
+                if len(value) == 10:
+                    return (0, 'postcode', value[:6])
+                elif len(value) == 5:
+                    return (0, 'postcode', value)
+                else:
+                    return (-1, None, None)
+
+        elif ':' not in key[5:]:
+            return (0, key[5:], value)
+
+    elif key.startswith('metcouncil:'):
+        k_len = len('metcouncil:')
+
+        if ':' not in key[k_len:]:
+            return (1, key[k_len:], value)
+
+    return (-1, None, None)
+
 def shape_k_tag(element, node):
     """Cleans the k-tags of an element.
 
@@ -78,34 +114,26 @@ def shape_k_tag(element, node):
 
     Returns:
         dict: An updated node dictionary.
+        None: Inconsistent data in the k-tags that indicated the node wasn't
+            actually in Minneapolis.
     """
     # Lists to hold specific special fields
-    addr = []
+    subfields_list = [[], []]
     node_refs = []
-    metcouncil = []
+
 
     # Iterate through tags and nds of an element
     for child in element:
         if child.tag == 'tag':
             if PROBLEMCHARS.search(child.attrib['k']) is None:
+                # Subfield information
                 if ":" in child.attrib["k"]:
-
-                    # Special K tags with important sub fields
-
-                    # Address information
-                    if child.attrib['k'].startswith('addr:'):
-                        if 'addr:state' == child.attrib["k"]:
-                            addr.append(("state", "MN"))
-                        elif ':' not in child.attrib['k'][5:]:
-                            addr.append((child.attrib['k'][5:],
-                                         child.attrib['v']))
-
-                    # Metcouncil data from the city of MN
-                    elif child.attrib['k'].startswith('metcouncil:'):
-                        _len = len('metcouncil:')
-                        if ':' not in child.attrib['k'][_len:]:
-                            metcouncil.append((child.attrib['k'][_len:],
-                                               child.attrib['v']))
+                    (spec, key, value) = clean_subfield_tags(child.attrib['k'],
+                                                             child.attrib['v'])
+                    if spec == -1:
+                        return None
+                    else:
+                        subfields_list[spec].append((key, value))
 
                 # All other k tags
                 else:
@@ -116,11 +144,10 @@ def shape_k_tag(element, node):
 
         elif child.tag == 'nd':
             node_refs.append(child.attrib['ref'])
-
-    if metcouncil:
-        node['metcouncil'] = dict(metcouncil)
-    if addr:
-        node['address'] = dict(addr)
+    if subfields_list[0]:
+        node['address'] = dict(subfields_list[0])
+    if subfields_list[1]:
+        node['metcouncil'] = dict(subfields_list[1])
     if node_refs:
         node['node_refs'] = node_refs
 
@@ -157,25 +184,27 @@ def shape_element(element):
                 else:
                     node[key] = value
 
-            # Shape and store children tags
-            node = shape_k_tag(element, node)
-
             # Created dict
             node["created"] = dict(created_tuples)
+
+            # Shape and store children tags
+            node = shape_k_tag(element, node)
 
             return node
 
     return None
 
-def process_map(file_in):
+def process_map(file_in, collection):
     """Cleans map data and stores to a file.
 
     Receives a .osm file and goes node-by-node cleaning element and
     possibly adding it to the clean .json file with the same name as the .osm
-    file.
+    file. Also, adds the element into the collection.
 
     Args:
-        file_in (str): name of the file containing the data to be cleaned.
+        file_in (str): Name of the file containing the data to be cleaned.
+        collection (MongoCollection): Collection that the cleaned files will
+            be stored in.
     """
     file_out = "{0}.json".format(file_in[:-4])
     data = []
@@ -188,3 +217,5 @@ def process_map(file_in):
             if element:
                 data.append(element)
                 writer.write(json.dumps(element) + "\n")
+
+    collection.insert_many(data)
