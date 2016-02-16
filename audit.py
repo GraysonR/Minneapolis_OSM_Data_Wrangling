@@ -10,6 +10,7 @@ full_street_names = ["Street", "Avenue", "Boulevard", "Drive", "Court",
     "Place", "Square", "Lane", "Road", "Trail", "Parkway", "Commons", "Mall",
     "Terrace"]
 
+
 def audit_street_type(filename):
     street_types = Counter()
 
@@ -104,12 +105,12 @@ def test():
     osm_file = "minneapolis-saint-paul_minnesota.osm"
 
     start = time.time()
-    #street_types = audit_street_type(osm_file)
+    street_types = audit_street_type(osm_file)
     #tag_types = audit_node_tag_types(osm_file)
     #addr_met_tags = auit_addr_tag_types(osm_file)
-    audit_state_mn_zip(osm_file)
+    #audit_state_mn_zip(osm_file)
     #amenity_tags = audit_amenity_tag(osm_file)
     end = time.time()
 
-    #pprint.pprint(dict(amenity_tags))
+    pprint.pprint(dict(street_types))
     print "Audit took {0} seconds".format((end-start))

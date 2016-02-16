@@ -9,8 +9,13 @@ Attributes:
     PROBLEMCHARS (regex): Compiled regular expression to determine if there
         are any characters that would not work or be problematic when
         trying to structure the data.
+    STREET_TYPES_RE (regex): Compile regular expression to get the last word in
+        a street name. AKA-The street type.
     CREATED (list): List of strings that correspond to information in a XML
         elements attribute section about who added the data.
+    POSTCODES (list): List of acceptable Minneapolis post codes.
+    STREET_DICT (dict): Dictionary to transform non-normal street endings to
+        more standardized endings.
 
 """
 import xml.etree.cElementTree as ET
@@ -19,7 +24,18 @@ import codecs
 import json
 
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\.{}\t\r\n]')
+STREET_TYPES_RE = re.compile(r'\b\S+\.?$', re.IGNORECASE)
 CREATED = ["version", "changeset", "timestamp", "user", "uid"]
+POSTCODES = ['55401', '55402', '55403', '55404', '55405', '55406', '55407',
+             '55408', '55409']
+POSTCODES += ['554' + str(x) for x in range(10, 89)]
+STREET_NAMES = {"ave": "Avenue", "av": "Avenue", "blvd" : "Boulevard",
+    "boulivard" : "Boulevard", "dr": "Drive", "ct": "Court", "dr": "Drive",
+    "e": "East", "ln": "Lane", "n": "North", "ne": "Northeast",
+    "nw": "Northwest", "northwest`": "Northwest", "pkwy": "Parkway",
+    "pl": "Plaza", "rd": "Road", "s": "South", "se": "Southeast",
+    "sw": "Southwest", "street": "Street", "st": "Street", "trl": "Trail",
+    "ter": "Terrace", "terr": "Terrace", "w": "West"}
 
 
 def in_city_limits(lat, lon):
@@ -32,7 +48,6 @@ def in_city_limits(lat, lon):
     Returns:
         bool: True if latitude and longitude are within the city boundaries
             and False otherwise.
-    boundaries.
     """
     if lat <= 45.05125 and lat >= 44.889787:
         if lon <= -93.193794 and lon >= -93.329437:
@@ -40,7 +55,30 @@ def in_city_limits(lat, lon):
 
     return False
 
-def clean_value(value):
+def clean_street_field(value):
+    """Makes sure the street ending is formated correctly.
+
+    Args:
+        value (str): The original street name.
+
+    Returns:
+        str: Same string or updated string depending on how it was originally
+            formated.
+    """
+    match = STREET_TYPES_RE.search(value)
+
+    if match:
+        ending = match.group().replace('.', '')
+
+        if ending.lower() in STREET_NAMES.keys():
+            ending = STREET_NAMES[ending.lower()]
+
+        value = value[:match.start()] + ending
+
+    return value
+
+
+def clean_k_value(value):
     """Cleans string.
 
     Cleans the value of a k-tag fixing: misspelling, unnecessary capitalization.
@@ -73,7 +111,8 @@ def clean_subfield_tags(key, value):
         value (str): The value associated with the key.
 
     Returns:
-        TODO: fix
+        (int, str, str): Number to specify which dictionary it goes in (addr or
+            metcouncil), the key in the dictionary, and the value for that key.
     """
     if key.startswith('addr:'):
         # Deals with inconsistent state entered
@@ -83,12 +122,15 @@ def clean_subfield_tags(key, value):
 
         elif key == 'addr:postcode':
             if value.isdigit() and len(value) >= 5:
-                if len(value) == 10:
+                if len(value) == 10 and value[:6] in POSTCODES:
                     return (0, 'postcode', value[:6])
-                elif len(value) == 5:
+                elif len(value) == 5 and value in POSTCODES:
                     return (0, 'postcode', value)
                 else:
                     return (-1, None, None)
+
+        elif key == 'addr:street':
+            return (0, 'street', clean_street_field(value))
 
         elif ':' not in key[5:]:
             return (0, key[5:], value)
@@ -137,7 +179,7 @@ def shape_k_tag(element, node):
 
                 # All other k tags
                 else:
-                    value = clean_value(child.attrib['v'])
+                    value = clean_k_value(child.attrib['v'])
 
                     if value:
                         node[child.attrib['k']] = value
