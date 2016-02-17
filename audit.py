@@ -1,3 +1,16 @@
+"""Quick and dirty auditing of raw XML to understand the problems, limitations,
+and structure of the data.
+
+
+Attributes:
+    STREET_TYPES_RE (regex): Compile regular expression to get the last word in
+        a street name. AKA-The street type.
+    CREATED (list): List of strings that correspond to information in a XML
+        elements attribute section about who added the data.
+    FULL_STREET_NAMES (list): List of standard street name endings.
+"""
+
+
 import xml.etree.cElementTree as ET
 from collections import Counter, defaultdict
 from sets import Set
@@ -5,8 +18,8 @@ import re
 import pprint
 import time
 
-street_type_re = re.compile(r'\b\S+\.?$', re.IGNORECASE)
-full_street_names = ["Street", "Avenue", "Boulevard", "Drive", "Court",
+STREET_TYPE_RE = re.compile(r'\b\S+\.?$', re.IGNORECASE)
+FULL_STREET_NAMES = ["Street", "Avenue", "Boulevard", "Drive", "Court",
     "Place", "Square", "Lane", "Road", "Trail", "Parkway", "Commons", "Mall",
     "Terrace"]
 
@@ -23,11 +36,11 @@ def audit_street_type(filename):
                 for tag in elem.iter("tag"):
                     if tag.attrib["k"] == 'addr:street':
                         # Last word/letters of street address
-                        m = street_type_re.search(tag.attrib["v"])
+                        m = STREET_TYPE_RE.search(tag.attrib["v"])
                         if m:
                             # Add ending to dictionary
                             street_type = m.group()
-                            if street_type not in full_street_names:
+                            if street_type not in FULL_STREET_NAMES:
                                 street_types[street_type] += 1
 
     return street_types
@@ -100,17 +113,3 @@ def audit_amenity_tag(filename):
                         tag_types[tag.attrib["v"]] += 1
 
     return tag_types
-
-def test():
-    osm_file = "minneapolis-saint-paul_minnesota.osm"
-
-    start = time.time()
-    street_types = audit_street_type(osm_file)
-    #tag_types = audit_node_tag_types(osm_file)
-    #addr_met_tags = auit_addr_tag_types(osm_file)
-    #audit_state_mn_zip(osm_file)
-    #amenity_tags = audit_amenity_tag(osm_file)
-    end = time.time()
-
-    pprint.pprint(dict(street_types))
-    print "Audit took {0} seconds".format((end-start))

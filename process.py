@@ -11,12 +11,12 @@ Attributes:
         trying to structure the data.
     STREET_TYPES_RE (regex): Compile regular expression to get the last word in
         a street name. AKA-The street type.
+    CITY_NAMES (list): List of acceptable city names for a node/way to be in.
     CREATED (list): List of strings that correspond to information in a XML
         elements attribute section about who added the data.
     POSTCODES (list): List of acceptable Minneapolis post codes.
     STREET_DICT (dict): Dictionary to transform non-normal street endings to
         more standardized endings.
-
 """
 import xml.etree.cElementTree as ET
 import re
@@ -24,18 +24,19 @@ import codecs
 import json
 
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\.{}\t\r\n]')
-STREET_TYPES_RE = re.compile(r'\b\S+\.?$', re.IGNORECASE)
+CITY_NAMES = ["Minneapolis", "Saint Paul", "Minneapolis, MN", "St. Paul"]
 CREATED = ["version", "changeset", "timestamp", "user", "uid"]
-POSTCODES = ['55401', '55402', '55403', '55404', '55405', '55406', '55407',
-             '55408', '55409']
-POSTCODES += ['554' + str(x) for x in range(10, 89)]
-STREET_NAMES = {"ave": "Avenue", "av": "Avenue", "blvd" : "Boulevard",
-    "boulivard" : "Boulevard", "dr": "Drive", "ct": "Court", "dr": "Drive",
-    "e": "East", "ln": "Lane", "n": "North", "ne": "Northeast",
-    "nw": "Northwest", "northwest`": "Northwest", "pkwy": "Parkway",
-    "pl": "Plaza", "rd": "Road", "s": "South", "se": "Southeast",
-    "sw": "Southwest", "street": "Street", "st": "Street", "trl": "Trail",
-    "ter": "Terrace", "terr": "Terrace", "w": "West"}
+POSTCODES = ["55401", "55402", "55403", "55404", "55405", "55406", "55407",
+             "55408", "55409"]
+POSTCODES += ["554" + str(x) for x in range(10, 89)]
+STREET_TYPES = {"ave": "Avenue", "av": "Avenue", "blvd" : "Boulevard",
+                "boulivard" : "Boulevard", "ct": "Court", "dr": "Drive",
+                "e": "East", "ln": "Lane", "n": "North", "ne": "Northeast",
+                "nw": "Northwest", "northwest`": "Northwest", "pkwy": "Parkway",
+                "pl": "Plaza", "rd": "Road", "s": "South", "se": "Southeast",
+                "sw": "Southwest", "street": "Street", "st": "Street",
+                "trl": "Trail", "ter": "Terrace", "terr": "Terrace",
+                "w": "West"}
 
 
 def in_city_limits(lat, lon):
@@ -56,7 +57,7 @@ def in_city_limits(lat, lon):
     return False
 
 def clean_street_field(value):
-    """Makes sure the street ending is formated correctly.
+    """Makes sure the street name is formated correctly.
 
     Args:
         value (str): The original street name.
@@ -65,18 +66,24 @@ def clean_street_field(value):
         str: Same string or updated string depending on how it was originally
             formated.
     """
-    match = STREET_TYPES_RE.search(value)
 
-    if match:
-        ending = match.group().replace('.', '')
+    street = value.split(' ')
+    value = ''
 
-        if ending.lower() in STREET_NAMES.keys():
-            ending = STREET_NAMES[ending.lower()]
+    for word in street:
+        # Space between words
+        if len(value) != 0:
+            value += ' '
 
-        value = value[:match.start()] + ending
+        temp_word = word.lower()
+        temp_word.replace('.', ' ')
+
+        if temp_word in STREET_TYPES.keys():
+            value += STREET_TYPES[temp_word]
+        else:
+            value += word
 
     return value
-
 
 def clean_k_value(value):
     """Cleans string.
@@ -126,11 +133,18 @@ def clean_subfield_tags(key, value):
                     return (0, 'postcode', value[:6])
                 elif len(value) == 5 and value in POSTCODES:
                     return (0, 'postcode', value)
-                else:
-                    return (-1, None, None)
 
         elif key == 'addr:street':
             return (0, 'street', clean_street_field(value))
+
+        elif key == 'addr:city':
+            if value in CITY_NAMES:
+                if 'MN' in value:
+                    return (0, 'city', CITY_NAMES[0])
+                elif value == 'St. Paul':
+                    return (0, 'city', CITY_NAMES[1])
+                else:
+                    return (0, 'city', value)
 
         elif ':' not in key[5:]:
             return (0, key[5:], value)
@@ -208,7 +222,9 @@ def shape_element(element):
 
             # GEO 2D data
             node["pos"] = [lat, lon]
-        except:
+        except KeyError:
+            pass
+        except ValueError:
             pass
 
         # Lat is positive and lon is neg, so if they exist they won't be equal

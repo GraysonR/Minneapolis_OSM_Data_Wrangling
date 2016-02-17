@@ -1,44 +1,77 @@
-from pymongo import MongoClient
-from sets import Set
+"""File to make queries on a MongoDB collection that is formatted by process.py.
+"""
 import re
+from sets import Set
 
-STREET_TYPES_RE = re.compile(r'\b\S+\.?$', re.IGNORECASE)
 
+class Query(object):
+    """Class to make queries to a database."""
 
-def count_elements(collection):
-    count = collection.count()
-    print 'Number of elements: {0}\n\n'.format(count)
+    def __init__(self, collection):
+        self.collection = collection
+        self.street_types_re = re.compile(r'\b\S+\.?$', re.IGNORECASE)
 
-def query_amenity(collection):
-    query = [{'$match' : {'amenity' : {'$exists' : '1'}}},
-             {'$group' : {'_id' : '$amenity', 'count' : {'$sum' : 1}}},
-             {'$sort' : {'count' : 1}}]
+    def query_all(self):
+        """Calls all other methods/ runs all current queries against the collection."""
+        self.count_elements()
+        self.query_amenity()
+        self.query_postal_code()
+        self.query_street_type()
+        self.query_users()
 
-    amenity_count = collection.aggregate(query)
+    def count_elements(self):
+        """Prints the number of nodes and ways in the collection."""
+        count = self.collection.count()
+        print 'Number of elements: {0}\n\n'.format(count)
 
-    for elem in amenity_count:
-        print '{0} : {1}'.format(elem['_id'], elem['count'])
+    def query_amenity(self):
+        """Lists the amenities in decreasing order of occurence."""
+        query = [{'$match' : {'amenity' : {'$exists' : '1'}}},
+                 {'$group' : {'_id' : '$amenity', 'count' : {'$sum' : 1}}},
+                 {'$sort' : {'count' : -1}},
+                 {'$limit' : 25}]
 
-    print '\n\n'
+        amenity_count = self.collection.aggregate(query)
 
-def query_postal_code(collection):
-    postalCodes = collection.distinct('address.postcode')
-    postalCodes.sort()
+        for elem in amenity_count:
+            print '{0} : {1}'.format(elem['_id'], elem['count'])
 
-    for elem in postalCodes:
-        print '{0}'.format(elem)
+        print '\n\n'
 
-    print 'Number of distinct post codes: {0}\n\n'.format(len(postalCodes))
+    def query_postal_code(self):
+        """Prints the distinct postal codes and how many there are."""
+        postal_codes = self.collection.distinct('address.postcode')
+        postal_codes.sort()
 
-def query_street_type(collection):
-    streets = collection.distinct('address.street')
-    unique_endings = Set()
+        for elem in postal_codes:
+            print '{0}'.format(elem)
 
-    for s in streets:
-        match = STREET_TYPES_RE.search(s)
+        print 'Number of distinct post codes: {0}\n\n'.format(len(postal_codes))
 
-        if match:
-            unique_endings.add(match.group(0))
+    def query_street_type(self):
+        """Prints the distinct street name endings."""
+        streets = self.collection.distinct('address.street')
+        unique_endings = Set()
 
-    print unique_endings
-    print "\n\n"
+        for street in streets:
+            match = self.street_types_re.search(street)
+
+            if match:
+                unique_endings.add(match.group())
+
+        print unique_endings
+        print "\n\n"
+
+    def query_users(self):
+        """Count and print in descending order to users with the most additions."""
+        query = [{'$group' : {'_id' : '$created.user', 'count' : {'$sum' : 1}}},
+                 {'$sort' : {'count' : -1}},
+                 {'$limit' : 25}]
+        users = self.collection.aggregate(query)
+
+        num_users = 0
+        for elem in users:
+            print u'{0} : {1}'.format(elem['_id'], elem['count'])
+            num_users += 1
+
+        print '\nDistinct Users: {0}\n\n'.format(num_users)
