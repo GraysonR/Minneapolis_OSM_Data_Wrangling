@@ -9,8 +9,6 @@ Attributes:
     PROBLEMCHARS (regex): Compiled regular expression to determine if there
         are any characters that would not work or be problematic when
         trying to structure the data.
-    STREET_TYPES_RE (regex): Compile regular expression to get the last word in
-        a street name. AKA-The street type.
     CITY_NAMES (list): List of acceptable city names for a node/way to be in.
     CREATED (list): List of strings that correspond to information in a XML
         elements attribute section about who added the data.
@@ -118,8 +116,8 @@ def clean_subfield_tags(key, value):
         value (str): The value associated with the key.
 
     Returns:
-        (int, str, str): Number to specify which dictionary it goes in (addr or
-            metcouncil), the key in the dictionary, and the value for that key.
+        (int, str, str): Number to specify whether or not to keep the data
+            element, the key in the dictionary, and the value for that key.
     """
     if key.startswith('addr:'):
         # Deals with inconsistent state entered
@@ -149,12 +147,6 @@ def clean_subfield_tags(key, value):
         elif ':' not in key[5:]:
             return (0, key[5:], value)
 
-    elif key.startswith('metcouncil:'):
-        k_len = len('metcouncil:')
-
-        if ':' not in key[k_len:]:
-            return (1, key[k_len:], value)
-
     return (-1, None, None)
 
 def shape_k_tag(element, node):
@@ -174,7 +166,7 @@ def shape_k_tag(element, node):
             actually in Minneapolis.
     """
     # Lists to hold specific special fields
-    subfields_list = [[], []]
+    address_list = []
     node_refs = []
 
 
@@ -189,7 +181,7 @@ def shape_k_tag(element, node):
                     if spec == -1:
                         return None
                     else:
-                        subfields_list[spec].append((key, value))
+                        address_list.append((key, value))
 
                 # All other k tags
                 else:
@@ -200,10 +192,8 @@ def shape_k_tag(element, node):
 
         elif child.tag == 'nd':
             node_refs.append(child.attrib['ref'])
-    if subfields_list[0]:
+    if address_list:
         node['address'] = dict(subfields_list[0])
-    if subfields_list[1]:
-        node['metcouncil'] = dict(subfields_list[1])
     if node_refs:
         node['node_refs'] = node_refs
 
