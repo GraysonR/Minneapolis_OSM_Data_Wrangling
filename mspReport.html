@@ -294,10 +294,13 @@ div#notebook {
         <span class="sd">&quot;&quot;&quot;Prints the number of nodes and ways in the collection.&quot;&quot;&quot;</span>
         <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
         <span class="n">ways_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;way&#39;</span><span class="p">})</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="n">nodes_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;node&#39;</span><span class="p">})</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
         <span class="n">ways_percent</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ways_count</span> <span class="o">*</span> <span class="mi">100</span> <span class="o">/</span> <span class="n">count</span><span class="p">)</span>
+        <span class="n">nodes_percent</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nodes_count</span> <span class="o">*</span> <span class="mi">100</span> <span class="o">/</span> <span class="n">count</span><span class="p">)</span>
 
+        <span class="k">print</span> <span class="s">&#39;COUNT ELEMENTS QUERY:&#39;</span>
         <span class="k">print</span> <span class="s">&#39;Number of elements: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s">&#39;Number of nodes: {0}  ({1}%)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="n">ways_count</span><span class="p">,</span> <span class="mi">100</span> <span class="o">-</span> <span class="n">ways_percent</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&#39;Number of nodes: {0}  ({1}%)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nodes_count</span><span class="p">,</span> <span class="n">nodes_percent</span><span class="p">)</span>
         <span class="k">print</span> <span class="s">&#39;Number of ways:  {0}  ({1}%)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ways_count</span><span class="p">,</span> <span class="n">ways_percent</span><span class="p">)</span>
 
         <span class="k">print</span> <span class="s">&#39;</span><span class="se">\n\n</span><span class="s">&#39;</span>
@@ -311,6 +314,7 @@ div#notebook {
 
         <span class="n">amenity_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 
+        <span class="k">print</span> <span class="s">&#39;QUERY TOP 25 AMENITIES:&#39;</span>
         <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">amenity_count</span><span class="p">:</span>
             <span class="k">print</span> <span class="s">&#39;{0} : {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">],</span> <span class="n">elem</span><span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">])</span>
 
@@ -324,6 +328,7 @@ div#notebook {
         <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">postal_codes</span><span class="p">:</span>
             <span class="k">print</span> <span class="s">&#39;{0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
 
+        <span class="k">print</span> <span class="s">&#39;DISTINCT POSTAL CODES:&#39;</span>
         <span class="k">print</span> <span class="s">&#39;Number of distinct post codes: {0}</span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">postal_codes</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">query_street_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -337,6 +342,7 @@ div#notebook {
             <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
                 <span class="n">unique_endings</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
 
+        <span class="k">print</span> <span class="s">&#39;QUERY STREET NAME ENDINGS:&#39;</span>
         <span class="k">print</span> <span class="n">unique_endings</span>
         <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n\n</span><span class="s">&quot;</span>
 
@@ -359,7 +365,7 @@ div#notebook {
         <span class="n">collection_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
         <span class="n">min_user_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">lt_query</span><span class="p">)</span><span class="o">.</span><span class="n">next</span><span class="p">()[</span><span class="s">&#39;count&#39;</span><span class="p">]</span>
 
-
+        <span class="k">print</span> <span class="s">&#39;USERS QUERY:&#39;</span>
         <span class="k">print</span> <span class="s">&#39;Users: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
         <span class="k">print</span> <span class="s">&#39;Users with less than 5 posts: {0} ({1:.2%})</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">min_user_count</span><span class="p">,</span>
                                                                      <span class="nb">float</span><span class="p">(</span><span class="n">min_user_count</span><span class="p">)</span> <span class="o">/</span> <span class="n">count</span><span class="p">)</span>
@@ -381,6 +387,7 @@ div#notebook {
         <span class="n">loc_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">next</span><span class="p">()[</span><span class="s">&#39;count&#39;</span><span class="p">]</span>
         <span class="n">loc_percent</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">loc_count</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
 
+        <span class="k">print</span> <span class="s">&#39;QUERY AMOUNT OF LOCATION INFORMATION:&#39;</span>
         <span class="k">print</span> <span class="s">&#39;Nodes or ways with location data: {0}  ({1:.2g}%)</span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loc_count</span><span class="p">,</span> <span class="n">loc_percent</span><span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span>
@@ -399,15 +406,18 @@ div#notebook {
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Number of elements: 531738
-Number of nodes: 324674  (62%)
+<pre>COUNT ELEMENTS QUERY:
+Number of elements: 531738
+Number of nodes: 320016  (60%)
 Number of ways:  207064  (38%)
 
 
 
+QUERY AMOUNT OF LOCATION INFORMATION:
 Nodes or ways with location data: 324469  (61%)
 
 
+QUERY TOP 25 AMENITIES:
 parking : 7147
 restaurant : 394
 school : 364
@@ -436,6 +446,7 @@ toilets : 24
 
 
 
+USERS QUERY:
 Users: 927
 Users with less than 5 posts: 442 (47.68%)
 
@@ -488,9 +499,8 @@ Kyle             |     2097|  0.39%
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="3.-Additional-Ideas">3. Additional Ideas<a class="anchor-link" href="#3.-Additional-Ideas">&#182;</a></h3><h4 id="Metcouncil-data">Metcouncil data<a class="anchor-link" href="#Metcouncil-data">&#182;</a></h4><p>Included in the original dataset was information from the city of Minneapolis. This information was mainly about bus stops. I wanted to include it in the dataset, but the time necessary to sufficiently clean it was too much. In the future, it would be interesting to include this data in. It would be difficult though because the data has inconsistent subfields (sometimes metcouncil has 2 subfields and sometimes it has 12) and contains information from outside of Minneapolis.</p>
-<h4 id="Location-improvement-/-expansion">Location improvement / expansion<a class="anchor-link" href="#Location-improvement-/-expansion">&#182;</a></h4><p>I would like to improve the data's integrity by only including nodes and ways I know are in Minneapolis. However, 39% of nodes and ways have no location information and it is hard to verify if an entry is really in the city if it does not have any location data.</p>
-<p>On the other hand, it would also be interesting to include data from the surrounding areas (suburbs and St. Paul) because it would include more data and the final data set would have more integrity. The problem is it would also be more work because I was getting entries from places as far away from Wisconsin which means I would still have to check the location of entries against a larger set of constraints (Minneapolis + St. Paul + suburbs). Essentially, the processing of the dataset would be more strenous and would take longer.</p>
+<h3 id="3.-Additional-Ideas">3. Additional Ideas<a class="anchor-link" href="#3.-Additional-Ideas">&#182;</a></h3><h4 id="Including-Public-Data">Including Public Data<a class="anchor-link" href="#Including-Public-Data">&#182;</a></h4><p>Included in the original dataset was information from the city of Minneapolis. Minneapolis has other open data projects that are publicly available. It would be nice if more of this data was introduced in a standard way. Right now, some data sets aren't included and others that are oddly formated (e.g. Metcouncil data).</p>
+<p>Since most likely many of the points in the OpenStreetMap and public data overlap, it would be interesting if while people put in data it is possible for them to add in/ confirm that public data related to the points they are adding. For instance, when someone adds in a bus stop there could be a check and there might be a match with the metcouncil data set that allows that person to add the field from the metcouncil in their entry. Essentially, rather than trying to add in the two datasets side-by-side have people naturally augment their entries with open data relevant to their addition. One of the biggest challenge in this would be efficiently matching people's realtime entries with entries from open data projects. Also, if people were allowed to add in the data they may enter it in the wrong place, so there would most likely need to be a verification that the user is not wildly off in their addition.</p>
 
 </div>
 </div>

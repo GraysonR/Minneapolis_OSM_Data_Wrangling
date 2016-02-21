@@ -30,10 +30,13 @@ class Query(object):
         """Prints the number of nodes and ways in the collection."""
         count = self.collection.count()
         ways_count = self.collection.find({'type': 'way'}).count()
+        nodes_count = self.collection.find({'type': 'node'}).count()
         ways_percent = int(ways_count * 100 / count)
+        nodes_percent = int(nodes_count * 100 / count)
 
+        print 'COUNT ELEMENTS QUERY:'
         print 'Number of elements: {0}'.format(count)
-        print 'Number of nodes: {0}  ({1}%)'.format(count - ways_count, 100 - ways_percent)
+        print 'Number of nodes: {0}  ({1}%)'.format(nodes_count, nodes_percent)
         print 'Number of ways:  {0}  ({1}%)'.format(ways_count, ways_percent)
 
         print '\n\n'
@@ -47,6 +50,7 @@ class Query(object):
 
         amenity_count = self.collection.aggregate(query)
 
+        print 'QUERY TOP 25 AMENITIES:'
         for elem in amenity_count:
             print '{0} : {1}'.format(elem['_id'], elem['count'])
 
@@ -60,6 +64,7 @@ class Query(object):
         for elem in postal_codes:
             print '{0}'.format(elem)
 
+        print 'DISTINCT POSTAL CODES:'
         print 'Number of distinct post codes: {0}\n\n'.format(len(postal_codes))
 
     def query_street_type(self):
@@ -73,6 +78,7 @@ class Query(object):
             if match:
                 unique_endings.add(match.group())
 
+        print 'QUERY STREET NAME ENDINGS:'
         print unique_endings
         print "\n\n"
 
@@ -95,7 +101,7 @@ class Query(object):
         collection_count = self.collection.count()
         min_user_count = self.collection.aggregate(lt_query).next()['count']
 
-
+        print 'USERS QUERY:'
         print 'Users: {0}'.format(count)
         print 'Users with less than 5 posts: {0} ({1:.2%})\n'.format(min_user_count,
                                                                      float(min_user_count) / count)
@@ -117,4 +123,5 @@ class Query(object):
         loc_count = self.collection.aggregate(query).next()['count']
         loc_percent = float(loc_count) * 100 / self.collection.count()
 
+        print 'QUERY AMOUNT OF LOCATION INFORMATION:'
         print 'Nodes or ways with location data: {0}  ({1:.2g}%)\n\n'.format(loc_count, loc_percent)

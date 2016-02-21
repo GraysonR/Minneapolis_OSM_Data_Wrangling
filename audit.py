@@ -25,6 +25,7 @@ FULL_STREET_NAMES = ["Street", "Avenue", "Boulevard", "Drive", "Court",
 
 
 def audit_street_type(filename):
+    """Auditing to see what type of non-standard street name endings exist. (e.g. st.)"""
     street_types = Counter()
 
     with open(filename, "r") as f:
@@ -46,6 +47,7 @@ def audit_street_type(filename):
     return street_types
 
 def audit_node_tag_types(filename):
+    """See what the composition/number of nodes and ways inside the data."""
     tag_types = Counter()
 
     with open(filename, "r") as f:
@@ -58,6 +60,7 @@ def audit_node_tag_types(filename):
     return tag_types
 
 def auit_addr_tag_types(filename):
+    """See what keys and values are in the address field."""
     tag_types = defaultdict(Set)
 
     with open(filename, "r") as f:
@@ -75,6 +78,7 @@ def auit_addr_tag_types(filename):
     return tag_types
 
 def audit_state_mn_zip(filename):
+    """Determine what non-Minneapolis zip codes exist."""
     zips = []
     for n in range(1,10): zips.append("5540" + str(n))
     for n in range(10, 89): zips.append("554" + str(n))
@@ -102,6 +106,7 @@ def audit_state_mn_zip(filename):
     print (_in, not_in, states)
 
 def audit_amenity_tag(filename):
+    """Count the different amentiy values."""
     tag_types = Counter()
 
     with open(filename, "r") as f:
